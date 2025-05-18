@@ -84,6 +84,9 @@ When complete, you’ll have an HTML file containing:
 1. A clickable list of your project’s folders and files.
 2. File content in `<pre>` blocks for each file, with “Copy” buttons.
 3. A “Copy ALL Text” button that copies content from all files.
+## Testing
+
+There are no automated tests yet. To verify the script manually, run it on a small project directory and open the generated HTML file in a browser.
 
 ## License
 
