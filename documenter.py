@@ -2,13 +2,19 @@ import os
 import html
 import argparse
 
+DEFAULT_IGNORES = [".git", ".gitignore", ".DS_Store"]
+
 def is_text_file(filepath):
-    """Check if a file is a text file by attempting to read it as UTF-8."""
+    """Return True if the file appears to contain UTF-8 text."""
     try:
-        with open(filepath, 'r', encoding='utf-8') as file:
-            file.read()
+        with open(filepath, "rb") as file:
+            chunk = file.read(1024)
+        if b"\x00" in chunk:
+            print(f"Skipping non-text file: {filepath}")
+            return False
+        chunk.decode("utf-8")
         return True
-    except:
+    except (UnicodeDecodeError, OSError):
         print(f"Skipping non-text file: {filepath}")
         return False
 
@@ -23,11 +29,7 @@ def remove_sensitive_info(content):
     return '\n'.join(lines)
 
 def should_ignore(path, ignore_list, include_all):
-    """
-    Decide whether to ignore a file or directory, based on:
-    - The default ignore list (if include_all is False).
-    - The user-provided ignore list.
-    """
+    """Return True if the path should be ignored based on ignore lists."""
     # If user has specified --include_all, do not ignore anything.
     if include_all:
         return False
@@ -183,6 +185,7 @@ def write_directory_contents_to_html(root_dir, output_file, remove_sensitive, ig
         output.write("</body></html>\n")
 
 def parse_arguments():
+    """Return command line arguments for the script."""
     parser = argparse.ArgumentParser(
         description="Generate HTML documentation for a project directory, with options to mask sensitive info."
     )
@@ -214,14 +217,11 @@ if __name__ == "__main__":
     args = parse_arguments()
     root_directory = args.directory.rstrip("\\/")
 
-    # Default ignores - add or remove as you see fit
-    default_ignores = [".git", ".gitignore", ".DS_Store"]
-
     # Merge user-supplied ignores with defaults (if not include_all)
     if args.ignore_list:
-        merged_ignores = default_ignores + args.ignore_list
+        merged_ignores = DEFAULT_IGNORES + args.ignore_list
     else:
-        merged_ignores = default_ignores
+        merged_ignores = DEFAULT_IGNORES
 
     if args.output:
         output_filename = args.output
