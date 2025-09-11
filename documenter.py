@@ -1,3 +1,18 @@
+"""Generate a single-page HTML overview of a project directory.
+
+The script walks a directory tree and produces an HTML document
+containing the structure and contents of each readable file, complete
+with copy-to-clipboard helpers. Sensitive database connection values
+can be masked and certain paths ignored. Key helpers include
+``write_directory_contents_to_html`` for building the page,
+``remove_sensitive_info`` for obfuscation, and ``is_text_file`` for
+detecting binary files.
+
+Command line usage:
+
+``python documenter.py <directory> [-o OUTPUT] [-r] [-i IGNORE ...] [--include_all] [-v]``
+"""
+
 import os
 import html
 import argparse
@@ -7,7 +22,14 @@ import logging
 DEFAULT_IGNORES = [".git", ".gitignore", ".DS_Store"]
 
 def is_text_file(filepath):
-    """Return True if the file appears to contain UTF-8 text."""
+    """Check if the file appears to contain UTF-8 text.
+
+    Parameters:
+        filepath (str): Path to the file to inspect.
+
+    Returns:
+        bool: True when the file decodes as UTF-8 text, False otherwise.
+    """
     try:
         with open(filepath, "rb") as file:
             chunk = file.read(1024)
@@ -21,7 +43,14 @@ def is_text_file(filepath):
         return False
 
 def remove_sensitive_info(content):
-    """Mask database connection values while preserving formatting."""
+    """Mask database connection values while preserving formatting.
+
+    Parameters:
+        content (str): Original file contents to scrub.
+
+    Returns:
+        str: Content with connection values replaced by asterisks.
+    """
     pattern = re.compile(r"(\$(?:host|db|user|pass|charset)\s*=\s*)([^\r\n]*)(\r?\n?)", re.IGNORECASE)
 
     def mask_line(line):
@@ -58,7 +87,16 @@ def remove_sensitive_info(content):
     return ''.join(mask_line(line) for line in lines)
 
 def should_ignore(path, ignore_list, include_all):
-    """Return True if the path should be ignored based on ignore lists."""
+    """Determine whether a path should be skipped.
+
+    Parameters:
+        path (str): Relative path of the file or directory.
+        ignore_list (list[str]): Collection of substrings that trigger ignoring.
+        include_all (bool): If True, ignore rules are bypassed.
+
+    Returns:
+        bool: True when the path should be ignored.
+    """
     # If user has specified --include_all, do not ignore anything.
     if include_all:
         return False
@@ -70,12 +108,23 @@ def should_ignore(path, ignore_list, include_all):
     return False
 
 def write_directory_contents_to_html(root_dir, output_file, remove_sensitive, ignore_list, include_all):
-    """
-    Walk through the directory, build an HTML file that includes:
-    - Directory structure
-    - File contents (with an option to mask sensitive information)
-    - Copy buttons for individual files
-    - A button for copying all text
+    """Create an HTML file describing the directory's structure and files.
+
+    Parameters:
+        root_dir (str): Directory to document.
+        output_file (str): Path of the HTML file to write.
+        remove_sensitive (bool): If True, mask sensitive information.
+        ignore_list (list[str]): Substrings identifying files or folders to skip.
+        include_all (bool): Whether to override ignoring behavior.
+
+    Returns:
+        None
+
+    Walk through the directory and build an HTML file that includes:
+        - Directory structure
+        - File contents (with an option to mask sensitive information)
+        - Copy buttons for individual files
+        - A button for copying all text
     """
     with open(output_file, 'w', encoding='utf-8') as output:
         # --- HTML HEAD WITH JAVASCRIPT FOR COPY FUNCTIONALITY ---
@@ -141,7 +190,14 @@ def write_directory_contents_to_html(root_dir, output_file, remove_sensitive, ig
         output.write("<ul>\n")
 
         def write_structure(current_dir):
-            """Recursively write the directory tree as nested <ul>/<li> lists."""
+            """Recursively write the directory tree as nested lists.
+
+            Parameters:
+                current_dir (str): Directory currently being processed.
+
+            Returns:
+                None
+            """
             rel_dir = os.path.relpath(current_dir, root_dir)
             if should_ignore(rel_dir, ignore_list, include_all):
                 return
@@ -218,7 +274,11 @@ def write_directory_contents_to_html(root_dir, output_file, remove_sensitive, ig
         output.write("</body></html>\n")
 
 def parse_arguments():
-    """Return command line arguments for the script."""
+    """Parse command line options for the script.
+
+    Returns:
+        argparse.Namespace: Parsed command line arguments.
+    """
     parser = argparse.ArgumentParser(
         description="Generate HTML documentation for a project directory, with options to mask sensitive info."
     )
