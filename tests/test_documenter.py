@@ -5,7 +5,7 @@ import xml.etree.ElementTree as ET
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from documenter import write_directory_contents_to_html, DEFAULT_IGNORES
+from documenter import write_directory_contents_to_html, DEFAULT_IGNORES, remove_sensitive_info
 
 
 def _find_child(li_elem, name):
@@ -42,3 +42,23 @@ def test_nested_directory_structure(tmp_path):
 
     dir_ab = _find_child(dir_a, 'a/b')
     assert dir_ab is not None
+
+
+def test_remove_sensitive_info_varied_formats():
+    content = (
+        "$host = 'localhost';\n"
+        "$db='mydb'\n"
+        "$user =    'admin' ;\n"
+        "$pass=secret;\n"
+        "$charset=\"utf8\"\n"
+        "normal line\n"
+    )
+    expected = (
+        "$host = '******';\n"
+        "$db='******'\n"
+        "$user =    '******' ;\n"
+        "$pass=******;\n"
+        "$charset=\"******\"\n"
+        "normal line\n"
+    )
+    assert remove_sensitive_info(content) == expected
