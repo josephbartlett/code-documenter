@@ -67,6 +67,9 @@ python documenter.py /path/to/project
   Disable both default and user-specified ignores and include every file/folder
   in the documentation.
 
+- **`-v`, `--verbose`** *(optional)*
+  Enable verbose logging (shows processed files).
+
 ## Example
 
 ```bash
@@ -82,6 +85,9 @@ python documenter.py my_project -r -i node_modules
 
 # Disable all ignores (includes defaults and any from --ignore_list)
 python documenter.py my_project -i node_modules --include_all
+
+# Enable verbose logging to see processed files
+python documenter.py my_project --verbose
 ```
 
 When complete, you’ll have an HTML file containing:

@@ -2,6 +2,7 @@ import os
 import html
 import argparse
 import re
+import logging
 
 DEFAULT_IGNORES = [".git", ".gitignore", ".DS_Store"]
 
@@ -11,12 +12,12 @@ def is_text_file(filepath):
         with open(filepath, "rb") as file:
             chunk = file.read(1024)
         if b"\x00" in chunk:
-            print(f"Skipping non-text file: {filepath}")
+            logging.info("Skipping non-text file: %s", filepath)
             return False
         chunk.decode("utf-8")
         return True
     except (UnicodeDecodeError, OSError):
-        print(f"Skipping non-text file: {filepath}")
+        logging.info("Skipping non-text file: %s", filepath)
         return False
 
 def remove_sensitive_info(content):
@@ -192,7 +193,7 @@ def write_directory_contents_to_html(root_dir, output_file, remove_sensitive, ig
 
                 anchor_name = html.escape(relative_path.replace("\\", "/").replace(" ", "_"))
 
-                print(f"Processing file: {relative_path}")
+                logging.info("Processing file: %s", relative_path)
                 output.write(f"<h3 id='{anchor_name}'>{html.escape(relative_path)}")
 
                 # Add the copy-button near each filename
@@ -209,7 +210,7 @@ def write_directory_contents_to_html(root_dir, output_file, remove_sensitive, ig
                             # Use a <pre> block with an id for each file's content
                             output.write(f"<pre id='{anchor_name}_pre'>{content_escaped}</pre>\n")
                     except Exception as e:
-                        print(f"Error reading file {filepath}: {e}")
+                        logging.warning("Error reading file %s: %s", filepath, e)
                         output.write("<p><em>Error reading file.</em></p>\n")
                 else:
                     output.write("<p><em>Binary file or non-readable content</em></p>\n")
@@ -242,11 +243,18 @@ def parse_arguments():
         help="Include all files (override all ignores, including default ignores)."
     )
 
+    parser.add_argument(
+        "-v",
+        "--verbose",
+        action="store_true",
+        help="Enable verbose (INFO) logging",
+    )
     args = parser.parse_args()
     return args
 
 if __name__ == "__main__":
     args = parse_arguments()
+    logging.basicConfig(level=logging.INFO if args.verbose else logging.WARNING)
     root_directory = args.directory.rstrip("\\/")
 
     # Merge user-supplied ignores with defaults
