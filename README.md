@@ -46,7 +46,9 @@ python documenter.py /path/to/project
 
 ### Command-Line Arguments
 
-- **`directory`** *(required)*  
+- By default, the script ignores `.git`, `.gitignore`, and `.DS_Store` entries.
+
+- **`directory`** *(required)*
   Path to the project directory you want to document.
 
 - **`-o`, `--output`** *(optional)*  
@@ -56,12 +58,13 @@ python documenter.py /path/to/project
 - **`-r`, `--remove_sensitive`** *(optional)*  
   Remove sensitive information (lines containing `$host`, `$user`, `$pass`, `$db`, `$charset`).  
 
-- **`-i`, `--ignore_list`** *(optional)*  
-  Provide a list of substrings or filenames to ignore.  
-  Example: `-i node_modules venv test.log`
+- **`-i`, `--ignore_list`** *(optional)*
+  Provide a list of substrings or filenames to ignore. These are added to the
+  default ignores. Example: `-i node_modules venv test.log`
 
-- **`--include_all`** *(optional)*  
-  Override all ignores and include every file/folder in the documentation.
+- **`--include_all`** *(optional)*
+  Disable both default and user-specified ignores and include every file/folder
+  in the documentation.
 
 ## Example
 
@@ -73,10 +76,11 @@ python documenter.py my_project
 python documenter.py my_project -o docs.html
 
 # Generate documentation, remove sensitive info, and ignore "node_modules"
+# (defaults `.git`, `.gitignore`, `.DS_Store` are always ignored)
 python documenter.py my_project -r -i node_modules
 
-# Ignore nothing (include all files)
-python documenter.py my_project --include_all
+# Disable all ignores (includes defaults and any from --ignore_list)
+python documenter.py my_project -i node_modules --include_all
 ```
 
 When complete, you’ll have an HTML file containing:
