@@ -62,3 +62,24 @@ def test_remove_sensitive_info_varied_formats():
         "normal line\n"
     )
     assert remove_sensitive_info(content) == expected
+
+
+def test_include_all_bypasses_default_and_user_ignores(tmp_path):
+    root = tmp_path / "root"
+    root.mkdir()
+    (root / ".gitignore").write_text("ignored")
+    (root / "secret.txt").write_text("top-secret")
+
+    merged = DEFAULT_IGNORES + ["secret"]
+
+    output_ignored = tmp_path / "ignored.html"
+    write_directory_contents_to_html(str(root), str(output_ignored), False, merged, False)
+    html_ignored = output_ignored.read_text()
+    assert ".gitignore" not in html_ignored
+    assert "secret.txt" not in html_ignored
+
+    output_included = tmp_path / "included.html"
+    write_directory_contents_to_html(str(root), str(output_included), False, merged, True)
+    html_included = output_included.read_text()
+    assert ".gitignore" in html_included
+    assert "secret.txt" in html_included
