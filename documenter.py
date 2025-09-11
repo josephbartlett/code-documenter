@@ -111,33 +111,37 @@ def write_directory_contents_to_html(root_dir, output_file, remove_sensitive, ig
         output.write("<h2>Project Structure</h2>\n")
         output.write("<ul>\n")
 
-        for subdir, dirs, files in os.walk(root_dir):
-            # Check if subdir is ignored
-            if should_ignore(os.path.relpath(subdir, root_dir), ignore_list, include_all):
-                # Modify 'dirs' in place to skip subdirectories inside ignored folder
-                dirs[:] = []
-                continue
+        def write_structure(current_dir):
+            """Recursively write the directory tree as nested <ul>/<li> lists."""
+            rel_dir = os.path.relpath(current_dir, root_dir)
+            if should_ignore(rel_dir, ignore_list, include_all):
+                return
 
-            dir_path = os.path.relpath(subdir, root_dir)
-            if dir_path == ".":
-                # top-level directory
-                dir_path_display = os.path.basename(root_dir) or root_dir
+            if rel_dir == ".":
+                display_name = os.path.basename(root_dir) or root_dir
             else:
-                dir_path_display = dir_path
+                display_name = rel_dir
 
-            # Print this directory
-            output.write(f"<li>{html.escape(dir_path_display)}\n<ul>\n")
+            output.write(f"<li>{html.escape(display_name)}\n<ul>\n")
 
-            for file in files:
-                # Check if file is ignored
-                rel_path = os.path.relpath(os.path.join(subdir, file), root_dir)
+            entries = sorted(os.listdir(current_dir))
+            dirs = [e for e in entries if os.path.isdir(os.path.join(current_dir, e))]
+            files = [e for e in entries if os.path.isfile(os.path.join(current_dir, e))]
+
+            for d in dirs:
+                sub_path = os.path.join(current_dir, d)
+                write_structure(sub_path)
+
+            for f in files:
+                rel_path = os.path.relpath(os.path.join(current_dir, f), root_dir)
                 if should_ignore(rel_path, ignore_list, include_all):
                     continue
-
                 anchor_name = html.escape(rel_path.replace("\\", "/").replace(" ", "_"))
                 output.write(f"<li><a href='#{anchor_name}'>{html.escape(rel_path)}</a></li>\n")
 
-            output.write("</ul></li>\n")
+            output.write("</ul>\n</li>\n")
+
+        write_structure(root_dir)
 
         output.write("</ul>\n")
 
