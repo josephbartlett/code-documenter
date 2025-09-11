@@ -233,7 +233,7 @@ def parse_arguments():
         "-i",
         "--ignore_list",
         nargs="*",
-        default=None,
+        default=[],
         help="List of folder/file substrings to ignore (e.g. .git .DS_Store)"
     )
     parser.add_argument(
@@ -249,11 +249,8 @@ if __name__ == "__main__":
     args = parse_arguments()
     root_directory = args.directory.rstrip("\\/")
 
-    # Merge user-supplied ignores with defaults (if not include_all)
-    if args.ignore_list:
-        merged_ignores = DEFAULT_IGNORES + args.ignore_list
-    else:
-        merged_ignores = DEFAULT_IGNORES
+    # Merge user-supplied ignores with defaults
+    merged_ignores = DEFAULT_IGNORES + args.ignore_list
 
     if args.output:
         output_filename = args.output
