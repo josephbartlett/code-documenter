@@ -1,6 +1,7 @@
 import os
 import html
 import argparse
+import re
 
 DEFAULT_IGNORES = [".git", ".gitignore", ".DS_Store"]
 
@@ -19,14 +20,41 @@ def is_text_file(filepath):
         return False
 
 def remove_sensitive_info(content):
-    """Mask certain sensitive lines in the file."""
-    lines = content.split('\n')
-    for i, line in enumerate(lines):
-        if "$host =" in line or "$db =" in line or "$user =" in line or "$pass =" in line or "$charset =" in line:
-            parts = line.split('=')
-            if len(parts) > 1:
-                lines[i] = parts[0] + "= '******';"
-    return '\n'.join(lines)
+    """Mask database connection values while preserving formatting."""
+    pattern = re.compile(r"(\$(?:host|db|user|pass|charset)\s*=\s*)([^\r\n]*)(\r?\n?)", re.IGNORECASE)
+
+    def mask_line(line):
+        match = pattern.search(line)
+        if not match:
+            return line
+
+        prefix = match.group(1)
+        rest = match.group(2)
+        newline = match.group(3)
+
+        leading_ws_match = re.match(r"\s*", rest)
+        leading_ws = leading_ws_match.group(0)
+        rest = rest[len(leading_ws):]
+
+        if rest.startswith("'") or rest.startswith('"'):
+            quote = rest[0]
+            closing_index = rest.find(quote, 1)
+            if closing_index == -1:
+                closing = ''
+                trailing = rest[1:]
+            else:
+                closing = quote
+                trailing = rest[closing_index + 1:]
+        else:
+            quote = ''
+            closing = ''
+            value_match = re.match(r"[^\s;]*", rest)
+            trailing = rest[value_match.end():]
+
+        return f"{prefix}{leading_ws}{quote}******{closing}{trailing}{newline}"
+
+    lines = content.splitlines(True)
+    return ''.join(mask_line(line) for line in lines)
 
 def should_ignore(path, ignore_list, include_all):
     """Return True if the path should be ignored based on ignore lists."""
