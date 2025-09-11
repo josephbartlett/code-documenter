@@ -20,6 +20,7 @@ Notable features include:
 - [Usage](#usage)
   - [Command-Line Arguments](#command-line-arguments)
 - [Example](#example)
+- [Contributing/Testing](#contributingtesting)
 - [License](#license)
 - [Author](#author)
 
@@ -88,9 +89,25 @@ When complete, you’ll have an HTML file containing:
 1. A clickable list of your project’s folders and files.
 2. File content in `<pre>` blocks for each file, with “Copy” buttons.
 3. A “Copy ALL Text” button that copies content from all files.
-## Testing
+## Contributing/Testing
 
-There are no automated tests yet. To verify the script manually, run it on a small project directory and open the generated HTML file in a browser.
+Contributions are welcome! To prepare a development environment and run future tests:
+
+1. **Create and activate a virtual environment**
+   ```bash
+   python -m venv .venv
+   source .venv/bin/activate
+   ```
+2. **Install testing dependencies**
+   ```bash
+   pip install pytest
+   ```
+3. **Run the test suite**
+   ```bash
+   pytest
+   ```
+
+Until a comprehensive automated suite is in place, run the script against a small sample project and open the generated HTML file in a browser as a manual smoke test.
 
 ## License
 
